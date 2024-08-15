@@ -10,6 +10,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+def clean_up_folder():
+    """Hapus semua file di folder jika sudah ada file."""
+    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    for file in files:
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file))
+
 @app.route('/')
 def index():
     # Cek apakah folder output ada dan tidak kosong
@@ -28,14 +34,8 @@ def upload_file():
             filename = file.filename
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-            # Cek jika file sudah ada, tambahkan angka di belakang jika perlu
-            if os.path.exists(file_path):
-                base, extension = os.path.splitext(filename)
-                i = 1
-                while os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], f"{base}_{i}{extension}")):
-                    i += 1
-                filename = f"{base}_{i}{extension}"
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Panggil fungsi untuk membersihkan folder
+            clean_up_folder()
 
             # Simpan gambar
             img.save(file_path)
@@ -56,19 +56,15 @@ def upload_folder():
         if file:
             try:
                 img = Image.open(file.stream).convert('L')
-                filename = file.filenames
+                filename = file.filename
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-                if os.path.exists(file_path):
-                    base, extension = os.path.splitext(filename)
-                    i = 1
-                    while os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], f"{base}_{i}{extension}")):
-                        i += 1
-                    filename = f"{base}_{i}{extension}"
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                # Panggil fungsi untuk membersihkan folder
+                clean_up_folder()
 
                 img.save(file_path)
                 processed_images.append(filename)
+
             except Exception as e:
                 return f'Error saat memproses gambar: {e}'
 
